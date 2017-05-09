@@ -23,7 +23,7 @@ module Marx
   # hmmm
   class Hunger < Flow; end
 
-  Reproduce = Operation.specify(input: Human.units(2), output: Human.units(3))
+  Reproduce = Operation.specify(input: Worker.units(2) + Food.units(10), output: Worker.units(3))
   Reproduction = Activity.specify(operations: [ Reproduce ])
   Bed = Machine.specify(activities: [ Reproduction ])
 
@@ -49,20 +49,40 @@ module Marx
     end
 
     class << self
-      attr_accessor :activities #, :stoc
-      def specify(activities: [])
+      attr_accessor :activities, :sym #, :stoc
+      def specify(sym, activities: [])
         klass = Class.new(Room)
         klass.activities = activities
+        klass.sym = sym
         klass
       end
     end
   end
 
-  Bedroom = Room.specify(activities: [ Reproduction ])
+  Bedroom = Room.specify(:bedroom, activities: [ Reproduction ])
   # DiningHall = Room.specify(activities: [ Eating ])
-  Workshop = Room.specify(activities: [ LightIndustry ])
+  Workshop = Room.specify(:workshop, activities: [ LightIndustry ])
 
   class Building < Capital
+    attr_reader :rooms
+
+    def initialize
+      # @occupants = []
+      @rooms = self.class.rooms.map(&:new)
+    end
+
+    # def inventory
+    #   @rooms.flat_map(&:inventory)
+    # end
+
+    def method_missing(meth, *args, &blk)
+      if (matching_room=@rooms.detect { |room| room.class.sym == meth })
+        matching_room
+      else
+        super
+      end
+    end
+
     class << self
       attr_accessor :rooms
       def specify(rooms: [])

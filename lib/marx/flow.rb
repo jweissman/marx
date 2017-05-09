@@ -33,7 +33,7 @@ module Marx
       end
     end
 
-    def produce!(stockpile) #, n=1)
+    def produce!(stockpile)
       puts "PRODUCE #{@quantity} UNIT(S) OF #{name}"
       stockpile << self.class.units(@quantity)
       true
@@ -47,23 +47,40 @@ module Marx
       "#{name} x#{quantity}"
     end
 
-    def self.unit
-      units(1)
+    def +(other)
+      ConjoinedFlow.new(self, other)
     end
 
-    def self.units(n)
-      # if n > 0
-      #   Array.new(n)
-      # else
-      #   raise "can't distribute negative units yet"
-      # end
-      new(qty: n)
+    class << self
+      def unit
+        units(1)
+      end
+
+      def units(n)
+        new(qty: n)
+      end
+
+      def quantity(stockpile = [])
+        matching_inputs = stockpile.select { |stock| stock.is_a?(self) }
+        return 0 if matching_inputs.none?
+        matching_inputs.map(&:quantity).inject(&:+)
+      end
+    end
+  end
+
+  # a flow of multiple kinds of flows... Steel.units(1) + Plastic.units(1) ...
+  class ConjoinedFlow
+    def initialize(left, right)
+      @left = left
+      @right = right
     end
 
-    def self.quantity(stockpile = [])
-      matching_inputs = stockpile.select { |stock| stock.is_a?(self) }
-      return 0 if matching_inputs.none?
-      matching_inputs.map(&:quantity).inject(&:+)
+    def consume!(stockpile)
+      @left.consume!(stockpile) && @right.consume!(stockpile)
+    end
+
+    def produce!(stockpile)
+      @left.produce!(stockpile) && @right.produce!(stockpile)
     end
   end
 end
