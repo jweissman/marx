@@ -22,10 +22,11 @@ module Marx
     end
 
     class << self
-      attr_accessor :rooms
-      def specify(rooms: [])
+      attr_accessor :rooms, :sym
+      def specify(sym, rooms: [])
         klass = Class.new(Building)
         klass.rooms = rooms
+        klass.sym = sym
         klass
       end
     end

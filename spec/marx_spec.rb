@@ -2,15 +2,15 @@ require 'spec_helper'
 require 'pry'
 require 'marx'
 
+# example material
 class Light < Material; end
 
 describe Flow do
   it 'should give units of stock' do
-    room = Room.new
-
     expect(Light.unit).to be_a(Stock)
     expect(Light.units(2)).to be_a(Stock)
 
+    room = Room.new
     Light.unit.produce!(room.inventory)
     expect(room.inventory.count).to eq(1)
     expect(room.inventory.first).to be_a(Light)
@@ -44,49 +44,52 @@ describe Worker do
     let(:loom_assembler) { LoomAssembler.new }
     let(:builder) { Worker.new }
     let(:weaver) { Worker.new }
-    # let(:workshop) { Workshop.new }
     let(:factory) { Factory.new }
 
     it 'builds a machine which can be operated' do
       Steel.units(50).produce!(factory.workshop.inventory)
-      # factory.workshop.inventory << Steel.units(50)
-      # binding.pry
 
       expect { builder.operate(loom_assembler, context: factory.workshop.inventory) }.to change { Loom.quantity(factory.workshop.inventory) }.by(1)
 
       expect(Steel.quantity(factory.workshop.inventory)).to eq(0)
 
       Wool.units(15).produce!(factory.workshop.inventory)
-      # factory.workshop.inventory << Wool.units(15)
       expect { weaver.labor!(environment: factory.workshop) }.to change { Clothing.quantity(factory.workshop.inventory) }.by(1)
     end
   end
 
-  xdescribe 'buildings' do
+  describe 'buildings' do
     let(:builder) { Worker.new }
+    let(:desert) { AridLand.new }
     it 'can make a building' do
-
+      Wood.units(150).produce!(desert.inventory)
+      Steel.units(100).produce!(desert.inventory)
+      Workbench.unit.produce!(desert.inventory)
+      expect { builder.labor!(environment: desert) }.to change { Residence.quantity(desert.inventory) }.by(1)
     end
   end
 
   describe 'social reproduction' do
     let(:residence)  { Residence.new }
-    # let(:parents) { Worker.units(2) }
 
     it 'creates new workers' do
       Food.units(10).produce!(residence.bedroom.inventory)
       Bed.unit.produce!(residence.bedroom.inventory)
       Worker.units(2).produce!(residence.bedroom.inventory)
-      # bed = Bed.new
-
-      # residence.bedroom.inventory << Food.units(10) # + bed #Bed.unit(1)
-      # residence.bedroom.inventory << Bed.unit
-      # residence.bedroom.inventory << parents
-
-      # expect(Worker.quantity(residence.bedroom.inventory)).to eq(2) #contain_exactly(parent_one, parent_two)
 
       expect { residence.work }.to change { Worker.quantity(residence.bedroom.inventory) }.by(1)
       expect(Food.quantity(residence.bedroom.inventory)).to eq(0)
     end
+  end
+end
+
+describe Industry do
+  subject(:clothier) { Clothier.new }
+  it 'should move workers around and make them work' do
+    Worker.unit.produce!(clothier.factory.workshop.inventory)
+    Wool.units(15).produce!(clothier.factory.workshop.inventory)
+    Loom.unit.produce!(clothier.factory.workshop.inventory)
+
+    expect { clothier.work }.to change { Clothing.quantity(clothier.factory.workshop.inventory) }.by(1)
   end
 end

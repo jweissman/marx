@@ -1,4 +1,5 @@
 require 'marx/version'
+require 'marx/stock'
 require 'marx/flow'
 require 'marx/operation'
 require 'marx/activity'
@@ -13,7 +14,6 @@ module Marx
   class Wool < Material; end
   class Steel < Material; end
   class Food < Material; end
-
   class Wood < Material; end
 
   class Commodity < Flow; end
@@ -27,9 +27,9 @@ module Marx
   # hmmm
   class Hunger < Flow; end
 
-  Reproduce = Operation.specify(input: Worker.units(2) + Food.units(10), output: Worker.units(3))
+  Reproduce    = Operation.specify(input: Worker.units(2) + Food.units(10), output: Worker.units(3))
   Reproduction = Activity.specify(operations: [ Reproduce ])
-  Bed = Machine.specify(activities: [ Reproduction ])
+  Bed          = Machine.specify(activities: [ Reproduction ])
 
   # PrepareMeal = Operation.specify(input: Food.units(20), output: Meal.unit)
   # EatFood = Operation.specify(input: Meal.unit, output: Hunger.units(-1))
@@ -37,29 +37,78 @@ module Marx
   # DiningTable = Machine.specify(activities: [ Eating ])
 
   MakeClothes = Operation.specify(input: Wool.units(15), output: Clothing.unit)
-  Tailoring = Activity.specify(operations: [ MakeClothes ])
-  Loom = Machine.specify(activities: [ Tailoring ])
+  Tailoring   = Activity.specify(operations: [ MakeClothes ])
+  Loom        = Machine.specify(activities: [ Tailoring ])
 
   ConstructLoom = Operation.specify(input: Steel.units(50), output: Loom.unit)
-  Loommaking = Activity.specify(operations: [ ConstructLoom ])
+  Loommaking    = Activity.specify(operations: [ ConstructLoom ])
   LoomAssembler = Machine.specify(activities: [ Loommaking ])
 
-  LightIndustry = Activity.specify(operations: [ Tailoring ])
+  # LightIndustry = Activity.specify(operations: [ Tailoring ])
 
+  Bedroom  = Room.specify(:bedroom, activities: [ Reproduction ])
+  Workshop = Room.specify(:workshop, activities: [ Tailoring ])
 
-  Bedroom = Room.specify(:bedroom, activities: [ Reproduction ])
-  Workshop = Room.specify(:workshop, activities: [ LightIndustry ])
+  Residence = Building.specify(:residence, rooms: [ Bedroom ])
+  Factory   = Building.specify(:factory, rooms: [ Workshop ])
 
-  Residence = Building.specify(rooms: [ Bedroom ])
-  Factory = Building.specify(rooms: [ Workshop ])
+  class Land < Capital
+    attr_accessor :inventory
+    def initialize(inventory: [])
+      @inventory = inventory
+    end
 
-  BuildHouse = Operation.specify(input: Wood.units(150) + Steel.units(100), output: Residence.unit)
+    class << self
+      attr_accessor :fertility
+      def specify(fertility:)
+        klass = Class.new(Land)
+        klass.fertility = fertility
+        klass
+      end
+    end
+  end
+
+  AridLand = Land.specify(fertility: 0.2)
+
+  BuildHouse   = Operation.specify(input: Wood.units(150) + Steel.units(100), output: Residence.unit)
   Construction = Activity.specify(operations: [ BuildHouse ])
+  Workbench    = Machine.specify(activities: [ Construction ])
 
   # machines cut flows / transform...
   # workers work machines...
 
-  # an industry may be an 'assemblage' of machines with workers/buildings/etc... ?
-  # class Industry < Capital
+  # an industry may be an 'assemblage' of machines with workers/buildings/land/etc... ?
+  class Industry < Capital
+    def initialize
+      @buildings = self.class.buildings.map(&:new)
+    end
+
+    def work
+      @buildings.each(&:work)
+    end
+
+    def method_missing(meth, *args, &blk)
+      if (matching_room=@buildings.detect { |room| room.class.sym == meth })
+        matching_room
+      else
+        super
+      end
+    end
+
+
+    class << self
+      attr_accessor :buildings
+      def specify(buildings:)
+        klass = Class.new(Industry)
+        klass.buildings = buildings
+        klass
+      end
+    end
+  end
+
+  Clothier = Industry.specify(buildings: [ Factory ])
+
+  # cities have industry kinds...
+  # class City < Capital
   # end
 end
