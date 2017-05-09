@@ -5,12 +5,16 @@ require 'marx/activity'
 require 'marx/capital'
 require 'marx/machine'
 require 'marx/worker'
+require 'marx/room'
+require 'marx/building'
 
 module Marx
   class Material < Flow; end
   class Wool < Material; end
   class Steel < Material; end
   class Food < Material; end
+
+  class Wood < Material; end
 
   class Commodity < Flow; end
   class Clothing < Commodity; end
@@ -42,59 +46,15 @@ module Marx
 
   LightIndustry = Activity.specify(operations: [ Tailoring ])
 
-  class Room < Capital
-    attr_accessor :inventory
-    def initialize(inventory: [])
-      @inventory = inventory
-    end
-
-    class << self
-      attr_accessor :activities, :sym #, :stoc
-      def specify(sym, activities: [])
-        klass = Class.new(Room)
-        klass.activities = activities
-        klass.sym = sym
-        klass
-      end
-    end
-  end
 
   Bedroom = Room.specify(:bedroom, activities: [ Reproduction ])
-  # DiningHall = Room.specify(activities: [ Eating ])
   Workshop = Room.specify(:workshop, activities: [ LightIndustry ])
-
-  class Building < Capital
-    attr_reader :rooms
-
-    def initialize
-      # @occupants = []
-      @rooms = self.class.rooms.map(&:new)
-    end
-
-    # def inventory
-    #   @rooms.flat_map(&:inventory)
-    # end
-
-    def method_missing(meth, *args, &blk)
-      if (matching_room=@rooms.detect { |room| room.class.sym == meth })
-        matching_room
-      else
-        super
-      end
-    end
-
-    class << self
-      attr_accessor :rooms
-      def specify(rooms: [])
-        klass = Class.new(Building)
-        klass.rooms = rooms
-        klass
-      end
-    end
-  end
 
   Residence = Building.specify(rooms: [ Bedroom ])
   Factory = Building.specify(rooms: [ Workshop ])
+
+  BuildHouse = Operation.specify(input: Wood.units(150) + Steel.units(100), output: Residence.unit)
+  Construction = Activity.specify(operations: [ BuildHouse ])
 
   # machines cut flows / transform...
   # workers work machines...

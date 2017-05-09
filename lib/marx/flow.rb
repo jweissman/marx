@@ -1,14 +1,35 @@
 module Marx
-  class Flow
+  # a stock *indicates* an amount to flow..
+  class Stock
+    attr_reader :flow_kind
     attr_accessor :quantity
 
-    def initialize(qty: 0)
-      @quantity = qty
+    def initialize(flow_kind, quantity: 1)
+      @flow_kind = flow_kind
+      @quantity = quantity
+    end
+
+    def name
+      @flow_kind.name.split('::').last
+    end
+
+    def to_s
+      "#{@flow_kind.name} x#{quantity}"
+    end
+
+    def +(other)
+      ConjoinedStock.new(self, other)
+    end
+
+    def can_take?(stockpile)
+      @flow_kind.quantity(stockpile) >= @quantity
     end
 
     def consume!(stockpile)
-      matching_inputs = stockpile.select { |stock| stock.is_a?(self.class) }
-      avail_qty = self.class.quantity(stockpile)
+      return unless can_take?(stockpile)
+      # binding.pry
+      matching_inputs = stockpile.select { |st| st.flow_kind == @flow_kind }
+      avail_qty = @flow_kind.quantity(stockpile)
       puts "---> Attempting to consume #{name}... Available: #{avail_qty} / Needed: #{@quantity}"
       if avail_qty >= @quantity
         puts "CONSUME #{@quantity} UNIT(S) OF #{name}"
@@ -35,21 +56,43 @@ module Marx
 
     def produce!(stockpile)
       puts "PRODUCE #{@quantity} UNIT(S) OF #{name}"
-      stockpile << self.class.units(@quantity)
+      stockpile << @flow_kind.units(@quantity)
       true
     end
 
-    def name
-      self.class.name.split('::').last
+    class << self
+      def reify(stockpile)
+        # go through and new up stockpile based on quantity?
+        stockpile.flat_map do |stock|
+          Array.new(stock.quantity) { stock.flow_kind.new }
+        end
+      end
+    end
+  end
+
+  class ConjoinedStock
+    def initialize(left, right)
+      @left = left
+      @right = right
     end
 
-    def to_s
-      "#{name} x#{quantity}"
+    def consume!(stockpile)
+      if @left.can_take?(stockpile) && @right.can_take?(stockpile)
+        @left.consume!(stockpile)
+        @right.consume!(stockpile)
+      end
     end
+  end
 
-    def +(other)
-      ConjoinedFlow.new(self, other)
-    end
+  # base class for everything that's 'reified'...
+  class Flow
+    # attr_accessor :quantity
+
+    # def initialize(qty: 0)
+    #   @quantity = qty
+    # end
+
+
 
     class << self
       def unit
@@ -57,11 +100,11 @@ module Marx
       end
 
       def units(n)
-        new(qty: n)
+        Stock.new(self, quantity: n)
       end
 
       def quantity(stockpile = [])
-        matching_inputs = stockpile.select { |stock| stock.is_a?(self) }
+        matching_inputs = stockpile.select { |stock| stock.flow_kind == self }
         return 0 if matching_inputs.none?
         matching_inputs.map(&:quantity).inject(&:+)
       end
@@ -69,18 +112,18 @@ module Marx
   end
 
   # a flow of multiple kinds of flows... Steel.units(1) + Plastic.units(1) ...
-  class ConjoinedFlow
-    def initialize(left, right)
-      @left = left
-      @right = right
-    end
+  # class ConjoinedFlow
+  #   def initialize(left, right)
+  #     @left = left
+  #     @right = right
+  #   end
 
-    def consume!(stockpile)
-      @left.consume!(stockpile) && @right.consume!(stockpile)
-    end
+  #   def consume!(stockpile)
+  #     @left.consume!(stockpile) && @right.consume!(stockpile)
+  #   end
 
-    def produce!(stockpile)
-      @left.produce!(stockpile) && @right.produce!(stockpile)
-    end
-  end
+  #   def produce!(stockpile)
+  #     @left.produce!(stockpile) && @right.produce!(stockpile)
+  #   end
+  # end
 end

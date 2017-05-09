@@ -2,6 +2,16 @@ require 'spec_helper'
 require 'pry'
 require 'marx'
 
+class Light < Material; end
+
+describe Flow do
+  it 'should give stocks of units' do
+    expect(Light.unit).to be_a(Stock)
+    expect(Light.units(2)).to be_a(Stock)
+    # expect(Light.unit.reify).to be_a(Light)
+  end
+end
+
 describe Worker do
   describe 'operating machinery' do
     let(:weaver) { Worker.new }
@@ -41,20 +51,28 @@ describe Worker do
     end
   end
 
+  describe 'buildings' do
+    let(:builder) { Worker.new }
+    it 'can make a building' do
+
+    end
+  end
+
   describe 'social reproduction' do
     let(:residence)  { Residence.new }
     let(:parents) { Worker.units(2) }
 
     it 'creates new workers' do
-      bed = Bed.new
+      # bed = Bed.new
 
-      residence.bedroom.inventory << Food.units(10)
-      residence.bedroom.inventory << bed
+      residence.bedroom.inventory << Food.units(10) # + bed #Bed.unit(1)
+      residence.bedroom.inventory << Bed.unit
       residence.bedroom.inventory << parents
 
       expect(Worker.quantity(residence.bedroom.inventory)).to eq(2) #contain_exactly(parent_one, parent_two)
 
-      expect { bed.perform(context: residence.bedroom.inventory) }.to change { Worker.quantity(residence.bedroom.inventory) }.by(1)
+      expect { residence.work }.to change { Worker.quantity(residence.bedroom.inventory) }.by(1)
+      expect(Food.quantity(residence.bedroom.inventory)).to eq(0)
     end
   end
 end
