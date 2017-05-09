@@ -4,13 +4,11 @@ module Marx
 
     def initialize(qty: 0)
       @quantity = qty
-      # @@flows ||= []
-      # @@flows << self
     end
 
     def consume!(stockpile)
       matching_inputs = stockpile.select { |stock| stock.is_a?(self.class) }
-      avail_qty = self.class.quantity(stockpile) # matching_inputs.map(&:quantity).inject(&:+)
+      avail_qty = self.class.quantity(stockpile)
       puts "---> Attempting to consume #{name}... Available: #{avail_qty} / Needed: #{@quantity}"
       if avail_qty >= @quantity
         puts "CONSUME #{@quantity} UNIT(S) OF #{name}"
@@ -54,6 +52,11 @@ module Marx
     end
 
     def self.units(n)
+      # if n > 0
+      #   Array.new(n)
+      # else
+      #   raise "can't distribute negative units yet"
+      # end
       new(qty: n)
     end
 

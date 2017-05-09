@@ -24,13 +24,16 @@ describe Worker do
     let(:loom_assembler) { LoomAssembler.new }
     let(:builder) { Worker.new }
     let(:weaver) { Worker.new }
+    let(:workshop) { Workshop.new }
 
     it 'builds a machine which can be operated' do
-      @factory_floor = [ Steel.units(50) ]
-      expect { builder.operate(loom_assembler, context: @factory_floor) }.to change {Loom.quantity(@factory_floor)}.by(1)
+      workshop.inventory << Steel.units(50)
+      # @factory_floor = [ Steel.units(50) ]
+      expect { builder.operate(loom_assembler, context: workshop.inventory) }.to change {Loom.quantity(workshop.inventory)}.by(1)
+      expect(Steel.quantity(workshop.inventory)).to eq(0)
 
       weaver.inventory << Wool.units(15)
-      expect { weaver.work!(Loom, environment: @factory_floor) }.to change {Clothing.quantity(weaver.inventory)}.by(1)
+      expect { weaver.labor!(environment: workshop) }.to change {Clothing.quantity(weaver.inventory)}.by(1)
     end
   end
 
@@ -39,10 +42,8 @@ describe Worker do
     let(:weaver) { Worker.new }
     let(:worker) { Worker.new }
 
-    # xit 'eats' do
-    # end
-
     it 'creates new workers' do
+      # redi
     end
   end
 end

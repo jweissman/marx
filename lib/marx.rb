@@ -4,6 +4,7 @@ require 'marx/operation'
 require 'marx/activity'
 require 'marx/capital'
 require 'marx/machine'
+require 'marx/worker'
 
 module Marx
   class Material < Flow; end
@@ -17,14 +18,19 @@ module Marx
 
   class Money < Flow; end
   # class Capital < Flow; end
-  class People < Flow; end
+  # class People < Flow; end
 
   # hmmm
   class Hunger < Flow; end
 
-  PrepareMeal = Operation.specify(input: Food.units(20), output: Meal.unit)
-  EatFood = Operation.specify(input: Meal.unit, output: Hunger.units(-1))
-  Eating = Activity.specify(operations: [ EatFood ])
+  Reproduce = Operation.specify(input: Human.units(2), output: Human.units(3))
+  Reproduction = Activity.specify(operations: [ Reproduce ])
+  Bed = Machine.specify(activities: [ Reproduction ])
+
+  # PrepareMeal = Operation.specify(input: Food.units(20), output: Meal.unit)
+  # EatFood = Operation.specify(input: Meal.unit, output: Hunger.units(-1))
+  # Eating = Activity.specify(operations: [ EatFood ])
+  # DiningTable = Machine.specify(activities: [ Eating ])
 
   MakeClothes = Operation.specify(input: Wool.units(15), output: Clothing.unit)
   Tailoring = Activity.specify(operations: [ MakeClothes ])
@@ -34,10 +40,16 @@ module Marx
   Loommaking = Activity.specify(operations: [ ConstructLoom ])
   LoomAssembler = Machine.specify(activities: [ Loommaking ])
 
+  LightIndustry = Activity.specify(operations: [ Tailoring ])
 
   class Room < Capital
+    attr_accessor :inventory
+    def initialize(inventory: [])
+      @inventory = inventory
+    end
+
     class << self
-      attr_accessor :activities
+      attr_accessor :activities #, :stoc
       def specify(activities: [])
         klass = Class.new(Room)
         klass.activities = activities
@@ -46,7 +58,9 @@ module Marx
     end
   end
 
-  DiningHall = Room.specify(activities: [ Eating ])
+  Bedroom = Room.specify(activities: [ Reproduction ])
+  # DiningHall = Room.specify(activities: [ Eating ])
+  Workshop = Room.specify(activities: [ LightIndustry ])
 
   class Building < Capital
     class << self
@@ -59,42 +73,13 @@ module Marx
     end
   end
 
-  Residence = Building.specify(rooms: [ DiningHall ])
+  Residence = Building.specify(rooms: [ Bedroom ])
+  Factory = Building.specify(rooms: [ Workshop ])
 
-  # cut flows / transform...
+  # machines cut flows / transform...
+  # workers work machines...
 
-  # work machines...
-  class Worker < People
-    attr_accessor :inventory
-
-    def initialize(inventory: [])
-      @inventory = inventory
-    end
-
-    def work!(machine_kind, environment:)
-      # does environment have a machine kind? if so operate it!
-      matching_machine = environment.detect do |stock|
-        stock.is_a?(machine_kind)
-      end
-
-      if matching_machine
-        operate(matching_machine)
-        true
-      else
-        puts "---> No maching of kind #{machine_kind} to operate!"
-        false
-      end
-    end
-
-    def operate(machine, context: @inventory)
-      machine.perform(context: context)
-      # if machine.class.input.consume!(context)
-      #   machine.class.output.produce!(context)
-      # end
-    end
-  end
-
-  # an industry is an 'assemblage' of machines with workers...
-  class Industry < Capital
-  end
+  # an industry may be an 'assemblage' of machines with workers/buildings/etc... ?
+  # class Industry < Capital
+  # end
 end
