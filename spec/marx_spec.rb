@@ -2,20 +2,30 @@ require 'spec_helper'
 require 'pry'
 require 'marx'
 
-# example material
-class Light < Material; end
+# example materials for flow spec
+class Energy < Material; end
+class Light < Energy; end
+class Matter < Material; end
 
 describe Flow do
-  it 'should give units of stock' do
-    expect(Light.unit).to be_a(Stock)
-    expect(Light.units(2)).to be_a(Stock)
+  it 'can be cut' do
+    # indicating units of flow gives a 'stock'
+    expect(Energy.unit).to be_a(Stock)
+    expect(Energy.units(2)).to be_a(Stock)
 
+    # stocks may be added together
+    expect(Energy.unit + Matter.unit).to be_a(ConjoinedStock)
+
+    # flows produced 'reified' entities into a room
     room = Room.new
     Light.unit.produce!(room.inventory)
     expect(room.inventory.count).to eq(1)
     expect(room.inventory.first).to be_a(Light)
 
+    # flow meter: use Flow.quantity to count...
     expect(Light.quantity(room.inventory)).to eq(1)
+
+    # nit
   end
 end
 
@@ -91,5 +101,16 @@ describe Industry do
     Loom.unit.produce!(clothier.factory.workshop.inventory)
 
     expect { clothier.work }.to change { Clothing.quantity(clothier.factory.workshop.inventory) }.by(1)
+  end
+end
+
+describe City do
+  subject(:megacity) { Megacity.new }
+  it 'should operate industries' do
+    Worker.unit.produce!(megacity.clothier.factory.workshop.inventory)
+    Wool.units(15).produce!(megacity.clothier.factory.workshop.inventory)
+    Loom.unit.produce!(megacity.clothier.factory.workshop.inventory)
+
+    expect { megacity.work }.to change { Clothing.quantity(megacity.clothier.factory.workshop.inventory) }.by(1)
   end
 end

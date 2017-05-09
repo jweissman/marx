@@ -88,8 +88,8 @@ module Marx
     end
 
     def method_missing(meth, *args, &blk)
-      if (matching_room=@buildings.detect { |room| room.class.sym == meth })
-        matching_room
+      if (matching_bldg=@buildings.detect { |building| building.class.sym == meth })
+        matching_bldg
       else
         super
       end
@@ -97,18 +97,45 @@ module Marx
 
 
     class << self
-      attr_accessor :buildings
-      def specify(buildings:)
+      attr_accessor :buildings, :sym
+      def specify(sym, buildings:)
         klass = Class.new(Industry)
         klass.buildings = buildings
+        klass.sym = sym
         klass
       end
     end
   end
 
-  Clothier = Industry.specify(buildings: [ Factory ])
+  Clothier = Industry.specify(:clothier, buildings: [ Factory ])
 
   # cities have industry kinds...
-  # class City < Capital
-  # end
+  class City < Capital
+    def initialize
+      @industries = self.class.industries.map(&:new)
+    end
+
+    def method_missing(meth, *args, &blk)
+      if (matching_room=@industries.detect { |industry| industry.class.sym == meth })
+        matching_room
+      else
+        super
+      end
+    end
+
+    def work
+      @industries.each(&:work)
+    end
+
+    class << self
+      attr_accessor :industries
+      def specify(industries:)
+        klass = Class.new(City)
+        klass.industries = industries
+        klass
+      end
+    end
+  end
+
+  Megacity = City.specify(industries: [ Clothier ])
 end
