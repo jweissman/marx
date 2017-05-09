@@ -7,7 +7,7 @@ module Marx
 
     def labor!(environment:)
       # does environment have a machine in stock? if so operate it!
-      Stock.reify(environment.inventory).detect do |machine|
+      environment.inventory.detect do |machine|
         if machine.respond_to?(:perform)
           operate machine, context: environment.inventory
         end

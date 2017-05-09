@@ -28,18 +28,19 @@ module Marx
     def consume!(stockpile)
       return unless can_take?(stockpile)
       # binding.pry
-      matching_inputs = stockpile.select { |st| st.flow_kind == @flow_kind }
+      matching_inputs = stockpile.select { |st| st.is_a?(@flow_kind) } #flow_kind == @flow_kind }
       avail_qty = @flow_kind.quantity(stockpile)
       puts "---> Attempting to consume #{name}... Available: #{avail_qty} / Needed: #{@quantity}"
       if avail_qty >= @quantity
         puts "CONSUME #{@quantity} UNIT(S) OF #{name}"
         total_consumed = 0
         matching_inputs.each do |matching_input|
-          puts "---> Consider amt to take from #{matching_input}"
-          amt_to_take = [ @quantity - total_consumed, matching_input.quantity ].min
-          puts "---> Taking #{amt_to_take}"
-          matching_input.quantity -= amt_to_take
-          total_consumed += amt_to_take
+          # puts "---> Consider amt to take from #{matching_input}"
+          # amt_to_take = 1 #[ @quantity - total_consumed, matching_input.quantity ].min
+          # puts "---> Taking #{amt_to_take}"
+          # matching_input.quantity -= amt_to_take
+          stockpile.delete(matching_input)
+          total_consumed += 1 # amt_to_take
           if total_consumed == @quantity
             # we are done
             puts "---> Finished consuming #{name}..."
@@ -56,17 +57,8 @@ module Marx
 
     def produce!(stockpile)
       puts "PRODUCE #{@quantity} UNIT(S) OF #{name}"
-      stockpile << @flow_kind.units(@quantity)
+      @quantity.times { stockpile << @flow_kind.new }
       true
-    end
-
-    class << self
-      def reify(stockpile)
-        # go through and new up stockpile based on quantity?
-        stockpile.flat_map do |stock|
-          Array.new(stock.quantity) { stock.flow_kind.new }
-        end
-      end
     end
   end
 
@@ -86,14 +78,6 @@ module Marx
 
   # base class for everything that's 'reified'...
   class Flow
-    # attr_accessor :quantity
-
-    # def initialize(qty: 0)
-    #   @quantity = qty
-    # end
-
-
-
     class << self
       def unit
         units(1)
@@ -103,10 +87,10 @@ module Marx
         Stock.new(self, quantity: n)
       end
 
-      def quantity(stockpile = [])
-        matching_inputs = stockpile.select { |stock| stock.flow_kind == self }
+      def quantity(stockpile) # = [])
+        matching_inputs = stockpile.select { |it| it.is_a?(self) } #flow_kind == self }
         return 0 if matching_inputs.none?
-        matching_inputs.map(&:quantity).inject(&:+)
+        matching_inputs.count #map(&:quantity).inject(&:+)
       end
     end
   end

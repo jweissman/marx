@@ -6,9 +6,9 @@ module Marx
     end
 
     def work
-      worker_stock = @inventory.select { |stock| stock.flow_kind == (Worker) }
-      workers = Stock.reify(worker_stock)
-      puts "---> Reified workers: #{workers}"
+      workers = @inventory.select { |it| it.is_a?(Worker) } # == (Worker) }
+      # workers = Stock.reify(worker_stock)
+      puts "---> Found workers in #{self.class.sym}: #{workers}"
       workers.each do |worker|
         worker.labor!(environment: self)
       end
