@@ -16,16 +16,13 @@ describe Flow do
     # stocks may be added together
     expect(Energy.unit + Matter.unit).to be_a(ConjoinedStock)
 
-    # flows produced 'reified' entities into a room
-    room = Room.new
+    # flows can produce 'reified' entities
+    room = Bedroom.new
     Light.unit.produce!(room.inventory)
-    expect(room.inventory.count).to eq(1)
-    expect(room.inventory.first).to be_a(Light)
+    expect(room.inventory.last).to be_a(Light)
 
-    # flow meter: use Flow.quantity to count...
+    # flow meter: use Flow.quantity to count entities in an inventory...
     expect(Light.quantity(room.inventory)).to eq(1)
-
-    # nit
   end
 end
 
@@ -84,7 +81,9 @@ describe Worker do
 
     it 'creates new workers' do
       Food.units(10).produce!(residence.bedroom.inventory)
-      Bed.unit.produce!(residence.bedroom.inventory)
+      # Bed.unit.produce!(residence.bedroom.inventory)
+
+      # two to tango!
       Worker.units(2).produce!(residence.bedroom.inventory)
 
       expect { residence.work }.to change { Worker.quantity(residence.bedroom.inventory) }.by(1)
@@ -96,9 +95,9 @@ end
 describe Industry do
   subject(:clothier) { Clothier.new }
   it 'should move workers around and make them work' do
-    Worker.unit.produce!(clothier.factory.workshop.inventory)
+    # Worker.unit.produce!(clothier.factory.workshop.inventory)
     Wool.units(15).produce!(clothier.factory.workshop.inventory)
-    Loom.unit.produce!(clothier.factory.workshop.inventory)
+    # Loom.unit.produce!(clothier.factory.workshop.inventory)
 
     expect { clothier.work }.to change { Clothing.quantity(clothier.factory.workshop.inventory) }.by(1)
   end
@@ -107,9 +106,9 @@ end
 describe City do
   subject(:megacity) { Megacity.new }
   it 'should operate industries' do
-    Worker.unit.produce!(megacity.clothier.factory.workshop.inventory)
+    # Worker.unit.produce!(megacity.clothier.factory.workshop.inventory)
     Wool.units(15).produce!(megacity.clothier.factory.workshop.inventory)
-    Loom.unit.produce!(megacity.clothier.factory.workshop.inventory)
+    # Loom.unit.produce!(megacity.clothier.factory.workshop.inventory)
 
     expect { megacity.work }.to change { Clothing.quantity(megacity.clothier.factory.workshop.inventory) }.by(1)
   end

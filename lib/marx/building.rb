@@ -7,7 +7,7 @@ module Marx
     end
 
     def work
-      puts "---> Work building #{self.class.name}"
+      puts "---> Working '#{self.class.sym}' (building)..."
       @rooms.each do |room|
         room.work
       end

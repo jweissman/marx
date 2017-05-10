@@ -8,6 +8,9 @@ require 'marx/machine'
 require 'marx/worker'
 require 'marx/room'
 require 'marx/building'
+require 'marx/industry'
+require 'marx/land'
+require 'marx/city'
 
 module Marx
   class Material < Flow; end
@@ -46,29 +49,13 @@ module Marx
 
   # LightIndustry = Activity.specify(operations: [ Tailoring ])
 
-  Bedroom  = Room.specify(:bedroom, activities: [ Reproduction ])
-  Workshop = Room.specify(:workshop, activities: [ Tailoring ])
+  Bedroom  = Room.specify(:bedroom, activities: [ Reproduction ], machines: [ Bed ])
+  Workshop = Room.specify(:workshop, activities: [ Tailoring ], machines: [ Loom ])
 
   Residence = Building.specify(:residence, rooms: [ Bedroom ])
   Factory   = Building.specify(:factory, rooms: [ Workshop ])
 
-  class Land < Capital
-    attr_accessor :inventory
-    def initialize(inventory: [])
-      @inventory = inventory
-    end
-
-    class << self
-      attr_accessor :fertility
-      def specify(fertility:)
-        klass = Class.new(Land)
-        klass.fertility = fertility
-        klass
-      end
-    end
-  end
-
-  AridLand = Land.specify(fertility: 0.2)
+  AridLand     = Land.specify(fertility: 0.2)
 
   BuildHouse   = Operation.specify(input: Wood.units(150) + Steel.units(100), output: Residence.unit)
   Construction = Activity.specify(operations: [ BuildHouse ])
@@ -76,66 +63,7 @@ module Marx
 
   # machines cut flows / transform...
   # workers work machines...
-
-  # an industry may be an 'assemblage' of machines with workers/buildings/land/etc... ?
-  class Industry < Capital
-    def initialize
-      @buildings = self.class.buildings.map(&:new)
-    end
-
-    def work
-      @buildings.each(&:work)
-    end
-
-    def method_missing(meth, *args, &blk)
-      if (matching_bldg=@buildings.detect { |building| building.class.sym == meth })
-        matching_bldg
-      else
-        super
-      end
-    end
-
-
-    class << self
-      attr_accessor :buildings, :sym
-      def specify(sym, buildings:)
-        klass = Class.new(Industry)
-        klass.buildings = buildings
-        klass.sym = sym
-        klass
-      end
-    end
-  end
-
   Clothier = Industry.specify(:clothier, buildings: [ Factory ])
-
-  # cities have industry kinds...
-  class City < Capital
-    def initialize
-      @industries = self.class.industries.map(&:new)
-    end
-
-    def method_missing(meth, *args, &blk)
-      if (matching_room=@industries.detect { |industry| industry.class.sym == meth })
-        matching_room
-      else
-        super
-      end
-    end
-
-    def work
-      @industries.each(&:work)
-    end
-
-    class << self
-      attr_accessor :industries
-      def specify(industries:)
-        klass = Class.new(City)
-        klass.industries = industries
-        klass
-      end
-    end
-  end
 
   Megacity = City.specify(industries: [ Clothier ])
 end
