@@ -1,9 +1,10 @@
 module Marx
   class Building < Capital
-    attr_reader :rooms
+    attr_reader :rooms, :industry
 
-    def initialize
-      @rooms = self.class.rooms.map(&:new)
+    def initialize(industry=nil)
+      @industry = industry
+      @rooms = self.class.rooms.map { |room_class| room_class.new(self) } #&:new)
     end
 
     def work

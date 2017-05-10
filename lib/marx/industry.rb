@@ -1,13 +1,18 @@
 module Marx
   # an industry is an 'assemblage' of machines with workers/buildings/land/etc
   class Industry < Capital
-    def initialize(worker_count: 1)
-      @buildings = self.class.buildings.map(&:new)
+    attr_reader :city, :buildings
+    def initialize(city=nil, worker_count: 1)
+      @city = city
+      @buildings = self.class.buildings.map do |building_class| #&:new)
+        building_class.new(self)
+      end
       rooms = @buildings.flat_map(&:rooms)
       worker_count.times { place_worker(rooms.sample) }
     end
 
     def place_worker(room)
+      puts "---> Place worker in room #{room}"
       Worker.unit.produce!(room.inventory)
     end
 

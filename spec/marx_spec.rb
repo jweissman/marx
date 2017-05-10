@@ -38,11 +38,12 @@ describe Worker do
 
     it 'consumes inputs' do
       # binding.pry
-      expect { weaver.operate(Loom.new, context: workshop.inventory) }.to change { Clothing.quantity(workshop.inventory) }.by(1)
+      expect { weaver.operate(Loom.new, context: workshop) }.to change { Clothing.quantity(workshop.inventory) }.by(1)
     end
 
     it 'produces outputs' do
-      expect { weaver.operate(Loom.new, context: workshop.inventory) }.to change { Wool.quantity(workshop.inventory) }.by(-15)
+      # binding.pry
+      expect { weaver.operate(Loom.new, context: workshop) }.to change { Wool.quantity(workshop.inventory) }.by(-15)
     end
   end
 
@@ -56,7 +57,7 @@ describe Worker do
     it 'builds a machine which can be operated' do
       Steel.units(50).produce!(factory.workshop.inventory)
 
-      expect { builder.operate(loom_assembler, context: factory.workshop.inventory) }.to change { Loom.quantity(factory.workshop.inventory) }.by(1)
+      expect { builder.operate(loom_assembler, context: factory.workshop) }.to change { Loom.quantity(factory.workshop.inventory) }.by(1)
 
       expect(Steel.quantity(factory.workshop.inventory)).to eq(0)
 
@@ -92,12 +93,18 @@ describe Worker do
   end
 end
 
+describe Room do
+  subject(:bedroom) { Bedroom.new }
+  it 'indicates what is required (consumed) and what is produced by machines/activities' do
+    expect(subject.consumption).to eq([Worker.units(2) + Food.units(10)])
+    expect(subject.production).to eq([Worker.units(3)])
+  end
+end
+
 describe Industry do
   subject(:clothier) { Clothier.new }
   it 'should move workers around and make them work' do
-    # Worker.unit.produce!(clothier.factory.workshop.inventory)
     Wool.units(15).produce!(clothier.factory.workshop.inventory)
-    # Loom.unit.produce!(clothier.factory.workshop.inventory)
 
     expect { clothier.work }.to change { Clothing.quantity(clothier.factory.workshop.inventory) }.by(1)
   end
@@ -106,9 +113,7 @@ end
 describe City do
   subject(:megacity) { Megacity.new }
   it 'should operate industries' do
-    # Worker.unit.produce!(megacity.clothier.factory.workshop.inventory)
     Wool.units(15).produce!(megacity.clothier.factory.workshop.inventory)
-    # Loom.unit.produce!(megacity.clothier.factory.workshop.inventory)
 
     expect { megacity.work }.to change { Clothing.quantity(megacity.clothier.factory.workshop.inventory) }.by(1)
   end

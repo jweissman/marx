@@ -21,6 +21,10 @@ module Marx
       ConjoinedStock.new(self, other)
     end
 
+    def ==(other)
+      self.flow_kind == other.flow_kind && self.quantity == other.quantity
+    end
+
     def can_take?(stockpile)
       @flow_kind.quantity(stockpile) >= @quantity
     end
@@ -64,16 +68,30 @@ module Marx
 
   # Wood.unit + Steel.unit ...
   class ConjoinedStock
+    attr_reader :left, :right
     def initialize(left, right)
       @left = left
       @right = right
     end
 
+    def can_take?(stockpile)
+      @left.can_take?(stockpile) && @right.can_take?(stockpile)
+    end
+
     def consume!(stockpile)
-      if @left.can_take?(stockpile) && @right.can_take?(stockpile)
+      if can_take?(stockpile) # @left.can_take?(stockpile) && @right.can_take?(stockpile)
         @left.consume!(stockpile)
         @right.consume!(stockpile)
       end
+    end
+
+    def produce!(stockpile)
+      @left.produce!(stockpile)
+      @right.produce!(stockpile)
+    end
+
+    def ==(other)
+      (@left == other.left && @right == other.right)
     end
   end
 end

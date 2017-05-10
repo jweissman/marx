@@ -9,14 +9,9 @@ module Marx
       end
     end
 
-    def perform(context:)
+    def perform(worker:, context:)
       self.class.activities.detect do |activity|
-        activity.operations.each do |operation|
-          if operation.input.consume!(context)
-            operation.output.produce!(context)
-            [operation, activity]
-          end
-        end
+        activity.perform(worker: worker, context: context)
       end
     end
   end

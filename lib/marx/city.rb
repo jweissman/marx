@@ -2,8 +2,14 @@ module Marx
   # cities have industry kinds (will need lands??)...
   class City < Capital
     def initialize
-      @industries = self.class.industries.map(&:new)
+      @industries = self.class.industries.map do |industry_class| #(&:new)
+        industry_class.new(self)
+      end
       # super
+    end
+
+    def rooms
+      @industries.flat_map(&:buildings).flat_map(&:rooms)
     end
 
     def method_missing(meth, *args, &blk)

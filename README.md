@@ -8,7 +8,7 @@
 
 ## Description
 
-TODO: Description
+Model a political economy
 
 ## Features
 
