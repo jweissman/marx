@@ -11,6 +11,7 @@ require 'marx/building'
 require 'marx/industry'
 require 'marx/land'
 require 'marx/city'
+require 'marx/hauling_strategy'
 
 module Marx
   class Material < Flow; end
@@ -21,51 +22,14 @@ module Marx
 
   class Commodity < Flow; end
   class Clothing < Commodity; end
-  class Meal < Commodity; end
+  # class Meal < Commodity; end
 
-  class Money < Flow; end
+  # class Money < Flow; end
   # class Capital < Flow; end
   # class People < Flow; end
 
   # hmmm
   class Hunger < Flow; end
-
-  class HaulingStrategy
-    attr_accessor :activity, :worker, :context
-
-    def initialize(activity:, worker:, context:)
-      @activity = activity
-      @worker = worker
-      @context = context
-    end
-
-    def apply!
-      hauling_diagram = city.haul_diagram
-      haul_from_room = hauling_diagram.keys.sample
-      haul_to_room = hauling_diagram[haul_from_room].sample
-      haul_stock(from: haul_from_room, to: haul_to_room)
-    end
-
-    protected
-    def city
-      @city ||= context.building.industry.city
-    end
-
-    def haul_stock(from:, to:)
-      from_room = city.rooms.shuffle.detect { |room| room.class.sym == from }
-      to_room = city.rooms.shuffle.detect { |room| room.class.sym == to }
-
-      Stock.split(from_room.production).each do |produced_flow|
-        if Stock.split(to_room.consumption).map(&:flow_kind).include?(produced_flow.flow_kind)
-          puts "---> HAUL #{produced_flow} from #{from} to #{to}!!!"
-          flow = produced_flow.clone
-          flow.quantity = [ flow.quantity, 5 ].min
-          flow.consume!(from_room.inventory)
-          flow.produce!(to_room.inventory)
-        end
-      end
-    end
-  end
 
   Haul = Activity.specify do |activity:, worker:, context:|
     strategy = HaulingStrategy.new(activity: activity, worker: worker, context: context)
@@ -110,8 +74,11 @@ module Marx
   AridLand     = Land.specify(fertility: 0.2)
 
   BuildHouse   = Operation.specify(input: Wood.units(150) + Steel.units(100), output: Residence.unit)
-  Construction = Activity.specify(operations: [ BuildHouse ])
-  Workbench    = Machine.specify(activities: [ Construction ])
+  Constructing = Activity.specify(operations: [ BuildHouse ])
+  Workbench    = Machine.specify(activities: [ Constructing ])
+  ConstructionYard = Room.specify(:construction_yard, activities: [ Constructing ], machines: [ Workbench ])
+  BuildersHall = Building.specify(:builder_hall, rooms: [ ConstructionYard ])
+  # = Room.
 
   Storeroom = Room.specify(:storeroom, activities: [ Haul ])
   Warehouse = Building.specify(:warehouse, rooms: [Storeroom])
@@ -121,7 +88,8 @@ module Marx
   Clothier = Industry.specify(:clothier, buildings: [ Factory ])
   Agriculture = Industry.specify(:agriculture, buildings: [ Barn ])
   Transport = Industry.specify(:transport, buildings: [ Warehouse ])
+  Construction = Industry.specify(:construction, buildings: [ BuildersHall ])
 
-  # city *districts* could specify industries...
-  Megacity = City.specify(industries: [ Clothier, Agriculture, Transport ]) # Sanitation? Utilities? Land mgmt?
+  # city *districts* could manage land... (and maybe specify 'local' industries...? some feel like they 'need' to be global... construction/transport!)
+  Megacity = City.specify(industries: [ Clothier, Agriculture, Transport, Construction ]) # Sanitation? Utilities? Land mgmt?
 end

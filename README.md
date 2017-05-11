@@ -4,13 +4,22 @@
 * [Documentation](http://rubydoc.info/gems/marx/frames)
 * [Email](mailto:jweissman1986 at gmail.com)
 
-[![Code Climate GPA](https://codeclimate.com/github//marx/badges/gpa.svg)](https://codeclimate.com/github//marx)
+[![Code Climate GPA](https://codeclimate.com/github/jweissman/marx/badges/gpa.svg)](https://codeclimate.com/github//marx)
 
 ## Description
 
 Model a political economy
 
 ## Features
+
+  - Describe and simulate "industrial" processes
+  - Specify classes of operations, activities, machines, buildings, industries
+
+## Goals
+
+  - [ ] Districts (between city and industry)
+  - [ ] Worker health/hunger/happiness
+  - [ ] Land management
 
 ## Examples
 

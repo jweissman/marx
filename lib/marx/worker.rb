@@ -1,9 +1,13 @@
 module Marx
   class Worker < Flow
+    attr_accessor :health
     # attr_accessor :inventory
-    # def initialize(inventory: [])
-    #   @inventory = inventory
-    # end
+    def initialize #(inventory: [])
+      # @health = 100.0
+      # @hunger = 0.0
+
+      # @inventory = inventory
+    end
 
     def labor!(environment:)
       # does environment have a machine in stock? if so operate it!
