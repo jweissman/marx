@@ -10,6 +10,7 @@ require 'marx/room'
 require 'marx/building'
 require 'marx/industry'
 require 'marx/land'
+require 'marx/district'
 require 'marx/city'
 require 'marx/hauling_strategy'
 
@@ -29,7 +30,7 @@ module Marx
   # class People < Flow; end
 
   # hmmm
-  class Hunger < Flow; end
+  # class Hunger < Flow; end
 
   Haul = Activity.specify do |activity:, worker:, context:|
     strategy = HaulingStrategy.new(activity: activity, worker: worker, context: context)
@@ -53,21 +54,17 @@ module Marx
   Loommaking    = Activity.specify(operations: [ ConstructLoom ])
   LoomAssembler = Machine.specify(activities: [ Loommaking ])
 
-  # LightIndustry = Activity.specify(operations: [ Tailoring ])
-
   Bedroom  = Room.specify(:bedroom, activities: [ Reproduction ], machines: [ Bed ])
   Workshop = Room.specify(:workshop, activities: [ Tailoring ], machines: [ Loom ]) #, requests: [ Wool ])
 
   Residence = Building.specify(:residence, rooms: [ Bedroom ])
   Factory   = Building.specify(:factory, rooms: [ Workshop ])
 
-  # LlamaQuarters = Room.specify(:workshop
   class Animal < Flow; end
   class Llama < Animal; end
 
   ShearWool = Operation.specify(input: Llama.unit, output: Llama.unit + Wool.units(50))
   ShearingWool = Activity.specify(operations: [ ShearWool ])
-  # Llama = Machine.specify(activities: [ ShearingWool ])
   AnimalQuarters = Room.specify(:animal_quarters, activities: [ ShearingWool ], machines: [ Llama ]) # not a machine!
   Barn           = Building.specify(:barn, rooms: [ AnimalQuarters ])
 
@@ -90,6 +87,13 @@ module Marx
   Transport = Industry.specify(:transport, buildings: [ Warehouse ])
   Construction = Industry.specify(:construction, buildings: [ BuildersHall ])
 
+  Industrial = District.specify(:industrial, industries: [ Transport, Agriculture ]) #, Construction ])
+  # Residential = District.specify(:residential, industries: [ Construction ])
+  Commercial = District.specify(:commercial, industries: [ Clothier ])
+  # Entertainment
+  # Food ...
+
   # city *districts* could manage land... (and maybe specify 'local' industries...? some feel like they 'need' to be global... construction/transport!)
-  Megacity = City.specify(industries: [ Clothier, Agriculture, Transport, Construction ]) # Sanitation? Utilities? Land mgmt?
+  Megacity = City.specify(districts: [ Industrial, Commercial ])
+    #industries: [ Clothier, Agriculture, Transport, Construction ]) # Sanitation? Utilities? Land mgmt?
 end

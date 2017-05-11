@@ -19,25 +19,15 @@ module Marx
     end
 
     def production
-      # machines = @inventory.select { |it| it.is_a?(Machine) }
       operations.flat_map(&:output)
-        # .flat_map(&:operations).flat_map(&:output) +
     end
 
     def consumption
       operations.flat_map(&:input)
-      # machines.flat_map(&:operations).flat_map(&:input)
     end
 
     def operations
       self.class.activities.flat_map(&:operations).compact
-      # + self.class.machines.flat_map do |machine_class|
-      #   if machine_class.respond_to?(:activities)
-      #     machine_class.activities.flat_map(&:operations)
-      #   else
-      #     []
-      #   end
-      # end
     end
 
     class << self
@@ -49,6 +39,19 @@ module Marx
         klass.sym = sym
         klass
       end
+
+      def has_matching_ends?(left, right)
+        return false if left == right # don't haul to the same place? this is a weird bug thoug
+        stocks_to_consume = Stock.split(right.consumption)
+        stocks_to_produce = Stock.split(left.production)
+        flows_to_produce = stocks_to_produce.map(&:flow_kind)
+
+        stocks_to_consume.any? do |consumed_stock|
+          flows_to_produce.include?(consumed_stock.flow_kind)
+        end
+      end
+
+      # TODO def matches? ...
     end
   end
 end
