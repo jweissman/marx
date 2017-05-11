@@ -30,14 +30,14 @@ module Marx
     end
 
     def operations
-      # binding.pry
-      self.class.machines.flat_map do |machine_class|
-        if machine_class.respond_to?(:activities)
-          machine_class.activities.flat_map(&:operations)
-        else
-          []
-        end
-      end
+      self.class.activities.flat_map(&:operations).compact
+      # + self.class.machines.flat_map do |machine_class|
+      #   if machine_class.respond_to?(:activities)
+      #     machine_class.activities.flat_map(&:operations)
+      #   else
+      #     []
+      #   end
+      # end
     end
 
     class << self

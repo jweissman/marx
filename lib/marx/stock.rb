@@ -34,7 +34,7 @@ module Marx
       # binding.pry
       matching_inputs = stockpile.select { |st| st.is_a?(@flow_kind) } #flow_kind == @flow_kind }
       avail_qty = @flow_kind.quantity(stockpile)
-      puts "---> Attempting to consume #{name}... Available: #{avail_qty} / Needed: #{@quantity}"
+      # puts "---> Attempting to consume #{name}... Available: #{avail_qty} / Needed: #{@quantity}"
       if avail_qty >= @quantity
         puts "CONSUME #{@quantity} UNIT(S) OF #{name}"
         total_consumed = 0
@@ -47,7 +47,7 @@ module Marx
           total_consumed += 1 # amt_to_take
           if total_consumed == @quantity
             # we are done
-            puts "---> Finished consuming #{name}..."
+            # puts "---> Finished consuming #{name}..."
             break
           end
         end
@@ -63,6 +63,22 @@ module Marx
       puts "PRODUCE #{@quantity} UNIT(S) OF #{name}"
       @quantity.times { stockpile << @flow_kind.new }
       true
+    end
+
+    def split!
+      self
+    end
+
+    class << self
+      def split(stock_arr)
+        stock_arr.flat_map do |stock|
+          if stock.is_a?(ConjoinedStock)
+            stock.split!
+          else
+            stock
+          end
+        end
+      end
     end
   end
 
@@ -92,6 +108,10 @@ module Marx
 
     def ==(other)
       (@left == other.left && @right == other.right)
+    end
+
+    def split!
+      [ @left.split!, @right.split! ]
     end
   end
 end

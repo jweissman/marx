@@ -30,33 +30,46 @@ module Marx
   # hmmm
   class Hunger < Flow; end
 
-  Haul = Activity.specify do |activity:, worker:, context:|
-    puts "=========> Worker #{worker} would haul! Context: #{context} <============"
-    city = context.building.industry.city
-    puts "---> city: #{city}"
+  class HaulingStrategy
+    attr_accessor :activity, :worker, :context
 
-    haul_to_candidates = city.rooms.select do |room|
-      # binding.pry
-      room.consumption.any?
+    def initialize(activity:, worker:, context:)
+      @activity = activity
+      @worker = worker
+      @context = context
     end
-    puts "---> Haul-to candidates: #{haul_to_candidates}"
 
-    haul_from_candidate = city.rooms.detect do |room|
-      # TODO ....
-      # binding.pry
-      room.production.any? && room.production.all? do |produced_stock|
-        produced_stock.quantity > 0 && (haul_to_candidates - [room]).any? do |haul_to_candidate|
-          # check that there's at least one candidate room actually looking for these things...
-          # binding.pry
-          haul_to_candidate.consumption.all? { |it| room.production.include?(it) }
+    def apply!
+      hauling_diagram = city.haul_diagram
+      haul_from_room = hauling_diagram.keys.sample
+      haul_to_room = hauling_diagram[haul_from_room].sample
+      haul_stock(from: haul_from_room, to: haul_to_room)
+    end
+
+    protected
+    def city
+      @city ||= context.building.industry.city
+    end
+
+    def haul_stock(from:, to:)
+      from_room = city.rooms.shuffle.detect { |room| room.class.sym == from }
+      to_room = city.rooms.shuffle.detect { |room| room.class.sym == to }
+
+      Stock.split(from_room.production).each do |produced_flow|
+        if Stock.split(to_room.consumption).map(&:flow_kind).include?(produced_flow.flow_kind)
+          puts "---> HAUL #{produced_flow} from #{from} to #{to}!!!"
+          flow = produced_flow.clone
+          flow.quantity = [ flow.quantity, 5 ].min
+          flow.consume!(from_room.inventory)
+          flow.produce!(to_room.inventory)
         end
       end
     end
-    puts "---> Haul-from candidate: #{haul_from_candidate}"
-    # puts "---> rooms: #{city.rooms}"
-    # okay, we know the rooms -- and what each room consumes/produces
-    # binding.pry
-    # we need to haul produced flows that are required by some consumd flow...
+  end
+
+  Haul = Activity.specify do |activity:, worker:, context:|
+    strategy = HaulingStrategy.new(activity: activity, worker: worker, context: context)
+    strategy.apply!
   end
 
   Reproduce    = Operation.specify(input: Worker.units(2) + Food.units(10), output: Worker.units(3))
@@ -110,5 +123,5 @@ module Marx
   Transport = Industry.specify(:transport, buildings: [ Warehouse ])
 
   # city *districts* could specify industries...
-  Megacity = City.specify(industries: [ Clothier, Agriculture, Transport ])
+  Megacity = City.specify(industries: [ Clothier, Agriculture, Transport ]) # Sanitation? Utilities? Land mgmt?
 end
