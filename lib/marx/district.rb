@@ -2,7 +2,7 @@ module Marx
   # a district is a part of a city... has industries and lands
   class District < Capital
     attr_reader :industries, :lands, :city
-    def initialize(city:)
+    def initialize(city: nil)
       puts "---> CREATE NEW DISTRICT #{self.class.sym}"
       @city = city
 
@@ -26,6 +26,11 @@ module Marx
       else
         super
       end
+    end
+
+    def describe
+      "----- DISTRICT #{self.class.sym} -----\n" + \
+        @industries.map(&:describe).join("\n")
     end
 
     class << self

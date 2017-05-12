@@ -15,6 +15,13 @@ module Marx
       worker_count.times { place_worker(rooms.sample) }
     end
 
+    def add_building(building_class)
+      land = @district.lands.sample
+      building = building_class.new(industry: self, land: land)
+      @buildings << building
+      building
+    end
+
     def place_worker(room)
       puts "---> Place worker in room #{room}"
       Worker.unit.produce!(room.inventory)
@@ -31,6 +38,11 @@ module Marx
       else
         super
       end
+    end
+
+    def describe
+      "--- INDUSTRY #{self.class.sym} ---\n" +
+        @buildings.map(&:describe).join("\n")
     end
 
     class << self

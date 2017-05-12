@@ -1,11 +1,16 @@
 module Marx
   class Activity
     class << self
-      attr_accessor :operations, :procedure
-      def specify(operations: [], &blk)
+      attr_accessor :operations, :procedure, :input, :output
+      def specify(operations: [], input: [], output: [], &blk)
         klass = Class.new(Activity)
         klass.operations = operations if operations.any?
+
+        # will need to mark input/output for procedures that consume/produce since they're kind of black boxes
         klass.procedure = blk if block_given?
+        klass.input = input # if input.any?
+        klass.output = output
+
         klass
       end
 

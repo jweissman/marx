@@ -16,6 +16,7 @@ module Marx
     def to_s
       "#{@flow_kind.name} x#{quantity}"
     end
+    alias :inspect :to_s
 
     def +(other)
       ConjoinedStock.new(self, other)
@@ -94,6 +95,11 @@ module Marx
     def ==(other)
       (@left == other.left && @right == other.right)
     end
+
+    def to_s
+      [@left.to_s, @right.to_s].join(';')
+    end
+    alias :inspect :to_s
 
     def split!
       [ @left.split!, @right.split! ]

@@ -10,6 +10,7 @@ module Marx
     end
 
     def perform(worker:, context:)
+      return unless self.class.activities
       self.class.activities.detect do |activity|
         activity.perform(worker: worker, context: context)
       end

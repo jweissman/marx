@@ -68,9 +68,12 @@ describe Worker do
 
   describe 'buildings' do
     let(:builder) { Worker.new }
-    let(:desert) { AridLand.new }
+    let(:district) { Residential.new }
+    let(:industry) { district.construction }
+    let(:desert) { district.lands.first }
     it 'can make a building' do
-      hall = BuildersHall.new(land: desert)
+      hall = industry.add_building(BuildersHall)
+      # hall = BuildersHall.new(land: desert, industry: industry)
       yard = hall.construction_yard
       Wood.units(150).produce!(yard.inventory)
       Steel.units(100).produce!(yard.inventory)
@@ -98,6 +101,7 @@ end
 describe Room do
   subject(:bedroom) { Bedroom.new }
   it 'indicates what is required (consumed) and what is produced by machines/activities' do
+    # binding.pry
     expect(subject.consumption).to eq([Worker.units(2) + Food.units(10)])
     expect(subject.production).to eq([Worker.units(3)])
   end

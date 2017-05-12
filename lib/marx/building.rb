@@ -4,6 +4,7 @@ module Marx
 
     def initialize(land: nil, industry: nil)
       @land = land
+      @land.inventory << self if @land
       @industry = industry
       @rooms = self.class.rooms.map { |room_class| room_class.new(self) } #&:new)
     end
@@ -21,6 +22,11 @@ module Marx
       else
         super
       end
+    end
+
+    def describe
+      "---- BUILDING #{self.class.sym} ----\n" +
+        @rooms.map(&:describe).join("\n")
     end
 
     class << self

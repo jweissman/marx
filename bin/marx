@@ -6,12 +6,13 @@ if File.directory?(File.join(root,'.git'))
     begin
       require 'bundler/setup'
       require 'marx'
+      require 'pry'
 
       include Marx
       city = Megacity.new
       tick = 0
       # Wool.units(1_000_000).produce!(city.clothier.factory.workshop.inventory)
-      loop { city.work; puts; puts ('=' * 20) + (tick+=1).to_s + ('=' * 20); puts; sleep 1 }
+      loop { city.work; puts; puts ('=' * 20) + (tick+=1).to_s + ('=' * 20); puts; puts city.describe; sleep 0.1 }
     rescue LoadError => e
       warn e.message
       warn "Run `gem install bundler` to install Bundler"

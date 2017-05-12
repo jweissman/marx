@@ -13,6 +13,8 @@ module Marx
       if hauling_diagram.empty?
         puts "(nothing to haul)"
         return
+      else
+        puts "-- Haul diagram: #{hauling_diagram}"
       end
       haul_from_room = hauling_diagram.keys.sample
       haul_to_room = hauling_diagram[haul_from_room].sample

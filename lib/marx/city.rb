@@ -24,18 +24,22 @@ module Marx
     end
 
     def haul_diagram
-      # map -- place to haul from => places to haul to
+      # puts "---> Assembling haul diagram..."
+      # map -- place to haul from => places to haul to.
       rooms.inject({}) do |hash, haul_from_room|
-        if haul_from_room.production.any?
+        # puts "---> Consider where to haul goods from #{haul_from_room.class.sym}..."
+        if Stock.split(haul_from_room.production).any?
+          # puts "---> #{haul_from_room.class.sym} has production: #{haul_from_room.production}"
           haul_to_rooms = rooms.select do |haul_to_room|
+            # puts "---> Checking whether #{haul_to_room.class.sym} has matching consumption..."
             Room.has_matching_ends?(haul_from_room, haul_to_room)
           end
 
           if haul_to_rooms.any?
+            # puts "---> Found rooms with matching consumption: #{haul_to_rooms.map(&:class).map(&:sym)}"
             hash[haul_from_room.class.sym] = haul_to_rooms.map(&:class).map(&:sym)
           end
         end
-
         hash
       end
     end
@@ -55,6 +59,11 @@ module Marx
       else
         super
       end
+    end
+
+    def describe
+      "===== CITY =====\n" + \
+        @districts.map(&:describe).join("\n")
     end
 
     # def work

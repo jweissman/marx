@@ -15,6 +15,14 @@ module Marx
         return 0 if matching_inputs.none?
         matching_inputs.count
       end
+
+      def analyze(stockpile)
+        flow_kinds = stockpile.map(&:class).uniq
+        flow_kinds.inject([]) do |arr, flow_kind|
+          arr << flow_kind.units(flow_kind.quantity(stockpile))
+          arr
+        end
+      end
     end
   end
 end

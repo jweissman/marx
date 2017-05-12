@@ -7,14 +7,17 @@ module Marx
       @context = context
     end
 
-    def land
-      @land ||= context.building.land #industry.district
-    end
+    # def land
+    #   @land ||= context.building.land #industry.district
+    # end
 
     def apply!(building:, input:)
+      # binding.pry
+      # building_instance = building.new
       # create building on district land...
       input.consume!(context.inventory) && \
-        building.unit.produce!(land.inventory)
+        context.building.industry.add_building(building)
+        # building.unit.produce!(land.inventory)
     end
   end
 end
