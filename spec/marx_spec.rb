@@ -70,10 +70,12 @@ describe Worker do
     let(:builder) { Worker.new }
     let(:desert) { AridLand.new }
     it 'can make a building' do
-      Wood.units(150).produce!(desert.inventory)
-      Steel.units(100).produce!(desert.inventory)
-      Workbench.unit.produce!(desert.inventory)
-      expect { builder.labor!(environment: desert) }.to change { Residence.quantity(desert.inventory) }.by(1)
+      hall = BuildersHall.new(land: desert)
+      yard = hall.construction_yard
+      Wood.units(150).produce!(yard.inventory)
+      Steel.units(100).produce!(yard.inventory)
+      # Workbench.unit.produce!(desert.inventory)
+      expect { builder.labor!(environment: yard) }.to change { Residence.quantity(desert.inventory) }.by(1)
     end
   end
 

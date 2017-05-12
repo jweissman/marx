@@ -31,32 +31,17 @@ module Marx
 
     def consume!(stockpile)
       return unless can_take?(stockpile)
-      # binding.pry
-      matching_inputs = stockpile.select { |st| st.is_a?(@flow_kind) } #flow_kind == @flow_kind }
-      avail_qty = @flow_kind.quantity(stockpile)
-      # puts "---> Attempting to consume #{name}... Available: #{avail_qty} / Needed: #{@quantity}"
-      if avail_qty >= @quantity
-        puts "CONSUME #{@quantity} UNIT(S) OF #{name}"
-        total_consumed = 0
-        matching_inputs.each do |matching_input|
-          # puts "---> Consider amt to take from #{matching_input}"
-          # amt_to_take = 1 #[ @quantity - total_consumed, matching_input.quantity ].min
-          # puts "---> Taking #{amt_to_take}"
-          # matching_input.quantity -= amt_to_take
-          stockpile.delete(matching_input)
-          total_consumed += 1 # amt_to_take
-          if total_consumed == @quantity
-            # we are done
-            # puts "---> Finished consuming #{name}..."
-            break
-          end
+      matching_inputs = stockpile.select { |st| st.is_a?(@flow_kind) }
+      puts "CONSUME #{@quantity} UNIT(S) OF #{name}"
+      total_consumed = 0
+      matching_inputs.each do |matching_input|
+        stockpile.delete(matching_input)
+        total_consumed += 1
+        if total_consumed == @quantity
+          break
         end
-
-        true
-      else
-        puts "===> Unable to consume required amount (#{@quantity}) of #{name}!"
-        false
       end
+      true
     end
 
     def produce!(stockpile)

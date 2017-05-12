@@ -13,6 +13,7 @@ require 'marx/land'
 require 'marx/district'
 require 'marx/city'
 require 'marx/hauling_strategy'
+require 'marx/constructing_strategy'
 
 module Marx
   class Material < Flow; end
@@ -70,26 +71,37 @@ module Marx
 
   AridLand     = Land.specify(fertility: 0.2)
 
-  BuildHouse   = Operation.specify(input: Wood.units(150) + Steel.units(100), output: Residence.unit)
-  Constructing = Activity.specify(operations: [ BuildHouse ])
-  Workbench    = Machine.specify(activities: [ Constructing ])
-  ConstructionYard = Room.specify(:construction_yard, activities: [ Constructing ], machines: [ Workbench ])
+  # BuildHouse   = Operation.specify(input: Wood.units(150) + Steel.units(100), output: Residence.unit)
+  # Constructing = Activity.specify do #(operations: [ BuildHouse ])
+  # end
+
+  Construct = ->(building:, input:) do
+    Activity.specify do |activity:, worker:, context:|
+      strategy = ConstructingStrategy.new(activity: activity, worker: worker, context: context)
+      strategy.apply!(building: building, input: input)
+    end
+  end
+
+  BuildHouse = Construct[building: Residence, input: Wood.units(150) + Steel.units(100)]
+
+  Workbench    = Machine.specify(activities: [ BuildHouse ])
+  ConstructionYard = Room.specify(:construction_yard, machines: [ Workbench ])
   BuildersHall = Building.specify(:builder_hall, rooms: [ ConstructionYard ])
   # = Room.
 
   Storeroom = Room.specify(:storeroom, activities: [ Haul ])
-  Warehouse = Building.specify(:warehouse, rooms: [Storeroom])
+  Warehouse = Building.specify(:warehouse, rooms: [ Storeroom ])
 
   # machines cut flows / transform...
   # workers work machines...
-  Clothier = Industry.specify(:clothier, buildings: [ Factory ])
-  Agriculture = Industry.specify(:agriculture, buildings: [ Barn ])
-  Transport = Industry.specify(:transport, buildings: [ Warehouse ])
+  Clothier     = Industry.specify(:clothier, buildings: [ Factory ])
+  Agriculture  = Industry.specify(:agriculture, buildings: [ Barn ])
+  Transport    = Industry.specify(:transport, buildings: [ Warehouse ])
   Construction = Industry.specify(:construction, buildings: [ BuildersHall ])
 
-  Industrial = District.specify(:industrial, industries: [ Transport, Agriculture ]) #, Construction ])
-  # Residential = District.specify(:residential, industries: [ Construction ])
-  Commercial = District.specify(:commercial, industries: [ Clothier ])
+  Industrial  = District.specify(:industrial, industries: [ Transport, Agriculture ], lands: [ AridLand ])
+  Residential = District.specify(:residential, industries: [ Construction ], lands: [ AridLand ])
+  Commercial  = District.specify(:commercial, industries: [ Clothier ], lands: [ AridLand ])
   # Entertainment
   # Food ...
 

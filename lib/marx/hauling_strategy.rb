@@ -32,7 +32,7 @@ module Marx
         if Stock.split(to_room.consumption).map(&:flow_kind).include?(produced_flow.flow_kind)
           flow = produced_flow.clone
           flow.quantity = [ flow.quantity, qty ].min
-          puts "---> HAUL #{flow} from #{from} to #{to}!!!"
+          puts "HAUL #{flow} from #{from} to #{to}"
           flow.consume!(from_room.inventory)
           flow.produce!(to_room.inventory)
         end

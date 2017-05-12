@@ -3,7 +3,7 @@ module Marx
   class City < Capital
     def initialize
       @districts = self.class.districts.map do |district_class|
-        district_class.new(self)
+        district_class.new(city: self)
       end
       # @industries = self.class.industries.map do |industry_class| #(&:new)
       #   industry_class.new(self)

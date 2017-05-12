@@ -5,7 +5,11 @@ module Marx
     def initialize(district: nil, worker_count: 1)
       @district = district
       @buildings = self.class.buildings.map do |building_class| #&:new)
-        building_class.new(self)
+        if @district && @district.lands.any?
+          building_class.new(industry: self, land: @district.lands.sample)
+        else
+          building_class.new(industry: self)
+        end
       end
       rooms = @buildings.flat_map(&:rooms)
       worker_count.times { place_worker(rooms.sample) }

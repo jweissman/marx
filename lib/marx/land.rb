@@ -1,7 +1,8 @@
 module Marx
   class Land < Capital
     attr_accessor :inventory
-    def initialize(inventory: [])
+    def initialize(district: nil, inventory: [])
+      @district  = district
       @inventory = inventory
     end
 

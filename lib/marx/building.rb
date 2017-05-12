@@ -1,8 +1,9 @@
 module Marx
   class Building < Capital
-    attr_reader :rooms, :industry
+    attr_reader :rooms, :industry, :land
 
-    def initialize(industry=nil)
+    def initialize(land: nil, industry: nil)
+      @land = land
       @industry = industry
       @rooms = self.class.rooms.map { |room_class| room_class.new(self) } #&:new)
     end
